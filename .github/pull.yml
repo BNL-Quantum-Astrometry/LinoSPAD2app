@@ -1,0 +1,14 @@
+version: "1"
+rules:
+  - base: main
+    upstream: rngKomorebi:main
+    mergeMethod: hardreset
+    mergeUnstable: true    
+  - base: develop
+    upstream: rngKomorebi:develop       
+    mergeMethod: hardreset
+    mergeUnstable: true
+  - base: gh-pages
+    upstream: rngKomorebi:gh-pages
+    mergeMethod: hardreset
+    mergeUnstable: true
