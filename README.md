@@ -1,0 +1,1 @@
+# Analysis code is on the [main](https://github.com/BNL-Quantum-Astrometry/LinoSPAD2app/tree/main) and [develop](https://github.com/BNL-Quantum-Astrometry/LinoSPAD2app/tree/develop) branches. This branch exists purely for the sake of automatically syncing this repository with upstream.
