@@ -1,7 +1,7 @@
 """Module for plotting data in the real-time plotting tab.
 
 Plots the data provided as number of timestamps vs. pixel number. Options
-for changing the plot scale (linear or logarithmic) and plotting of 
+for changing the plot scale (linear or logarithmic) and plotting of
 vertical lines at positions 64, 128, and 192 are provided. The figure
 widget is generated with the matplotlib navigation bar for additional
 control over the plot.
@@ -67,7 +67,8 @@ class PltCanvas(QWidget):
         """
         plt.rcParams.update({"font.size": fontsize})
         self.ax.set_xlabel("Pixel (-)", fontsize=fontsize)
-        self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        # self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        self.ax.set_ylabel("Photon rate (Hz)", fontsize=fontsize)
 
         self.ax.tick_params(which="both", width=2, direction="in")
         self.ax.tick_params(
@@ -82,7 +83,14 @@ class PltCanvas(QWidget):
         for axis in ["top", "bottom", "left", "right"]:
             self.ax.spines[axis].set_linewidth(2)
 
-    def setPlotData(self, xdataplot, yplotdata, xLim, grouping: bool = False):
+    def setPlotData(
+        self,
+        xdataplot,
+        yplotdata,
+        xLim,
+        grouping: bool = False,
+        fontsize: int = 16,
+    ):
         """Plot data.
 
         Plot the provided data while following the state of the axis
@@ -109,7 +117,7 @@ class PltCanvas(QWidget):
             )
         self.ax.relim()
         self.ax.autoscale_view()
-        self.setplotparameters()
+        self.setplotparameters(fontsize)
         self.ax.set_xlim(xLim[0], xLim[1])
         self.ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         self.figure.canvas.draw()

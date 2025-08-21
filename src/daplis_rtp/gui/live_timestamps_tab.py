@@ -142,6 +142,9 @@ class LiveTimestamps(QtWidgets.QWidget):
         self.last_file_ctime = 0
         self.timer.timeout.connect(self.update_time_stamp)
 
+        # Initial fontsize for the canvas
+        self.canvas_fontsize = 16
+
     # Testing adaptive fontsize
     def resizeEvent(self, event):
 
@@ -162,7 +165,9 @@ class LiveTimestamps(QtWidgets.QWidget):
             (current_width - min_width) / (max_width - min_width)
         ) * (max_fontsize - min_fontsize)
 
-        self.widget_figure.setplotparameters(fontsize=new_font_size)
+        self.canvas_fontsize = new_font_size
+
+        self.widget_figure.setplotparameters(fontsize=self.canvas_fontsize)
 
         super().resizeEvent(event)
 
@@ -306,6 +311,7 @@ class LiveTimestamps(QtWidgets.QWidget):
                         validtimestamps,
                         [self.leftPosition, self.rightPosition],
                         self.grouping,
+                        self.canvas_fontsize,
                     )
 
                     copy_for_max = np.sort(np.copy(validtimestamps))

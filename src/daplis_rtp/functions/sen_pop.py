@@ -68,4 +68,9 @@ def sen_pop(
         valid_per_pixel = fix
         del fix
 
-    return valid_per_pixel
+    acq_window_length = np.max(data[:].T[1]) * 1e-12
+    number_of_cycles = len(np.where(data[0].T[0] == -2)[0])
+
+    rates = valid_per_pixel / acq_window_length / number_of_cycles
+
+    return rates

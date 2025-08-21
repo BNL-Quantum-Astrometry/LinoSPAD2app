@@ -1,7 +1,7 @@
 """Module for plotting photon count from two chosen pixel in real time.
 
 Unpacks the binary data, finds the two pixels requested and plots the
-number of photons registered by the two pixels. x-axis limits are given 
+number of photons registered by the two pixels. x-axis limits are given
 by the slider, upper y-axis limit is set as maximum of the two counts
 plus 10 percent.
 
@@ -70,8 +70,9 @@ class PltCanvas_MZI(QWidget):
 
         """
         plt.rcParams.update({"font.size": fontsize})
-        self.ax.set_xlabel("Pixel (-)", fontsize=fontsize)
-        self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        self.ax.set_xlabel("File (-)", fontsize=fontsize)
+        # self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        self.ax.set_ylabel("Photon rate (Hz)", fontsize=fontsize)
 
         self.ax.tick_params(which="both", width=2, direction="in")
         self.ax.tick_params(
@@ -92,7 +93,9 @@ class PltCanvas_MZI(QWidget):
         for axis in ["top", "bottom", "left", "right"]:
             self.ax.spines[axis].set_linewidth(2)
 
-    def setPlotData_MZI(self, xdataplot, yplotdata1, yplotdata2, xLim, yLim):
+    def setPlotData_MZI(
+        self, xdataplot, yplotdata1, yplotdata2, xLim, yLim, fontsize: int = 16
+    ):
         """Plot data.
 
         Plot the provided data while following the state of the axis
@@ -116,7 +119,7 @@ class PltCanvas_MZI(QWidget):
         self.ax2.plot(xdataplot, yplotdata2, "-o", color="teal")
         self.ax.relim()
         self.ax.autoscale_view()
-        self.setplotparameters()
+        self.setplotparameters(fontsize)
         self.ax.set_xlim(xLim, xdataplot[-1] + 2)
 
         new_ylim = np.max([yplotdata1[-1], yplotdata2[-1]]) * 1.1
