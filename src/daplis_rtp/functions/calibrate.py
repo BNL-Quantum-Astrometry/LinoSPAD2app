@@ -8,10 +8,10 @@ The following functions are provided:
     * calibrate_load - loads the calibration matrix from a '.csv' file
 
 """
-import numpy as np
-import os
 import glob
-import pandas as pd
+import os
+
+import numpy as np
 
 
 def calibrate_save(path, timestamps: int = 512):
@@ -33,8 +33,7 @@ def calibrate_save(path, timestamps: int = 512):
 
     """
 
-    os.chdir(path)
-    filename = glob.glob("*.dat*")[0]
+    filename = glob.glob(os.path.join(path, "*.dat*"))[0]
 
     # read data by 32 bit words
     rawFile = np.fromfile(filename, dtype=np.uint32)
@@ -60,8 +59,7 @@ def calibrate_save(path, timestamps: int = 512):
         counts, bin_edges = np.histogram(data_matrix[i], bins=bins)
         # redefine the bin edges using the bin population from above
         cal_mat[i] = np.cumsum(counts) / np.cumsum(counts).max() * 2500
-    cal_mat_df = pd.DataFrame(cal_mat)
-    cal_mat_df.to_csv("Calibration_data.csv")
+    np.savetxt(os.path.join(path, "Calibration_data.csv"), cal_mat, delimiter=",")
 
 
 def calibrate_load(path, board_number: str):
@@ -82,14 +80,8 @@ def calibrate_load(path, board_number: str):
 
     """
 
-    path_to_back = os.getcwd()
-    os.chdir(path)
+    file = glob.glob(os.path.join(path, f"*{board_number}*"))[0]
 
-    file = glob.glob("*{}*".format(board_number))[0]
-
-    data_matrix = np.genfromtxt(file, delimiter=",", skip_header=1)
-    data_matrix = np.delete(data_matrix, 0, axis=1)
-
-    os.chdir(path_to_back)
+    data_matrix = np.genfromtxt(file, delimiter=",")
 
     return data_matrix

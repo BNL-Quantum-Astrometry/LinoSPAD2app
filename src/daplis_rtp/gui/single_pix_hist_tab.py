@@ -103,28 +103,35 @@ class SinglePixelHistogram(QtWidgets.QWidget):
         self.pix = self.spinBox_enterPixNumber.value()
         board_number = self.comboBox_boardNumber.currentText()
         timestamps = self.spinBox_timestamps.value()
-        os.chdir(self.folder)
-
-        files = glob.glob("*.dat*")
+        files = glob.glob(os.path.join(self.folder, "*.dat*"))
 
         try:
             last_file = max(files, key=os.path.getctime)
-        except (IndexError, FileNotFoundError):
+        except (ValueError, FileNotFoundError):
             msg_window = QtWidgets.QMessageBox()
             msg_window.setText(
                 "No data files found, check the working directory."
             )
             msg_window.setWindowTitle("Error")
             msg_window.exec_()
+            return
 
-        self.widget_figure.plot_hist(
-            last_file,
-            self.pix,
-            timestamps,
-            board_number,
-            fw_ver=self.comboBox_FW.currentText(),
-            cycle_length=self.cycle_length,
-        )
+        try:
+            self.widget_figure.plot_hist(
+                last_file,
+                self.pix,
+                timestamps,
+                board_number,
+                fw_ver=self.comboBox_FW.currentText(),
+                cycle_length=self.cycle_length,
+            )
+        except (FileNotFoundError, OSError):
+            msg_window = QtWidgets.QMessageBox()
+            msg_window.setText(
+                "Data file was removed before it could be read."
+            )
+            msg_window.setWindowTitle("Error")
+            msg_window.exec_()
 
     # Testing adaptive fontsize
     def resizeEvent(self, event):

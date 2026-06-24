@@ -75,9 +75,8 @@ class MZI(QtWidgets.QWidget):
         # 'Browse' button
         self.lineEdit_browse.textChanged.connect(self.change_path)
 
-        # Count of dataset for using as x axis; raised by 1 when
-        # update_time_stamp is called
-        self.dataset_count = 0
+        self.stream_start_time = 0
+        self.last_elapsed = 0
         self.pix1 = 0
         self.pix2 = 0
 
@@ -90,7 +89,7 @@ class MZI(QtWidgets.QWidget):
         )
 
         self.horizontalSlider_leftXLim.setMinimum(0)
-        self.horizontalSlider_leftXLim.setMaximum(self.dataset_count)
+        self.horizontalSlider_leftXLim.setMaximum(0)
         self.horizontalSlider_lowerXLim.setMinimum(0)
         self.horizontalSlider_lowerXLim.setMaximum(0)
 
@@ -165,6 +164,8 @@ class MZI(QtWidgets.QWidget):
 
         """
         self.last_file_ctime = 0
+        self.stream_start_time = 0
+        self.last_elapsed = 0
 
         if self.timerRunning is True:
             self.timer.stop()
@@ -223,7 +224,11 @@ class MZI(QtWidgets.QWidget):
     def resetPlot(self):
         self.widget_figure.ax.cla()
         self.widget_figure.ax2.cla()
-        self.dataset_count = 0
+        self.stream_start_time = 0
+        self.last_elapsed = 0
+        self.pix1 = 0
+        self.pix2 = 0
+        self.widget_figure.setplotparameters(self.canvas_fontsize)
         self.widget_figure.figure.canvas.draw()
         self.widget_figure.figure.canvas.flush_events()
 
@@ -235,12 +240,11 @@ class MZI(QtWidgets.QWidget):
 
         """
         stopping = False
-        os.chdir(self.pathtotimestamp)
-        DATA_FILES = glob.glob("*.dat*")
+        DATA_FILES = glob.glob(os.path.join(self.pathtotimestamp, "*.dat*"))
         try:
             last_file = max(DATA_FILES, key=os.path.getctime)
             new_file_ctime = os.path.getctime(last_file)
-        except (IndexError, FileNotFoundError):
+        except (ValueError, FileNotFoundError):
             msg_window = QtWidgets.QMessageBox()
             msg_window.setText(
                 "No data files found, check the working directory."
@@ -252,14 +256,14 @@ class MZI(QtWidgets.QWidget):
         if stopping is False:
             try:
                 if new_file_ctime > self.last_file_ctime:
-                    self.dataset_count += 1
-                    self.horizontalSlider_leftXLim.setMaximum(
-                        self.dataset_count
-                    )
+                    if self.stream_start_time == 0:
+                        self.stream_start_time = new_file_ctime
+                    elapsed = new_file_ctime - self.stream_start_time
+                    self.horizontalSlider_leftXLim.setMaximum(int(elapsed))
                     self.last_file_ctime = new_file_ctime
 
                     validtimestamps = sen_pop(
-                        self.pathtotimestamp + "/" + last_file,
+                        last_file,
                         board_number=self.comboBox_mask_2.currentText(),
                         fw_ver=self.comboBox_FW_2.currentText(),
                         timestamps=self.spinBox_timestamps_2.value(),
@@ -267,7 +271,7 @@ class MZI(QtWidgets.QWidget):
                     )
 
                     self.widget_figure.setPlotData_MZI(
-                        [self.dataset_count - 1, self.dataset_count],
+                        [self.last_elapsed, elapsed],
                         [
                             self.pix1,
                             validtimestamps[self.spinBox_FirstPixel.value()],
@@ -280,6 +284,7 @@ class MZI(QtWidgets.QWidget):
                         self.bottomPosition,
                         self.canvas_fontsize,
                     )
+                    self.last_elapsed = elapsed
                     self.pix1 = validtimestamps[
                         self.spinBox_FirstPixel.value()
                     ]
@@ -290,11 +295,11 @@ class MZI(QtWidgets.QWidget):
                         int(np.max([self.pix1, self.pix2]))
                     )
 
-            except ValueError:
+            except (ValueError, FileNotFoundError, OSError):
                 msg_window = QtWidgets.QMessageBox()
                 msg_window.setText(
-                    "Cannot unpack data, check the timestamp setting and "
-                    "the firmware version."
+                    "Cannot read data file — it may have been removed. "
+                    "Check the timestamp setting and firmware version."
                 )
                 msg_window.setWindowTitle("Error")
                 msg_window.exec_()

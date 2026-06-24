@@ -59,9 +59,6 @@ class PltCanvas_MZI(QWidget):
 
         self.setplotparameters()
 
-        # Upper ylim for the plot
-        self.upper_ylim = 0
-
     def setplotparameters(self, fontsize: int = 16):
         """Figure parameters manipulation.
 
@@ -70,7 +67,7 @@ class PltCanvas_MZI(QWidget):
 
         """
         plt.rcParams.update({"font.size": fontsize})
-        self.ax.set_xlabel("File (-)", fontsize=fontsize)
+        self.ax.set_xlabel("Time (s)", fontsize=fontsize)
         # self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
         self.ax.set_ylabel("Photon rate (Hz)", fontsize=fontsize)
 
@@ -119,15 +116,16 @@ class PltCanvas_MZI(QWidget):
         self.ax2.plot(xdataplot, yplotdata2, "-o", color="teal")
         self.ax.relim()
         self.ax.autoscale_view()
+        self.ax2.relim()
+        self.ax2.autoscale_view()
         self.setplotparameters(fontsize)
         self.ax.set_xlim(xLim, xdataplot[-1] + 2)
 
-        new_ylim = np.max([yplotdata1[-1], yplotdata2[-1]]) * 1.1
-        if new_ylim > self.upper_ylim:
-            self.upper_ylim = new_ylim
-
-        self.ax.set_ylim(yLim, self.upper_ylim)
-        self.ax2.set_ylim(yLim, self.upper_ylim)
+        _, ax1_top = self.ax.get_ylim()
+        _, ax2_top = self.ax2.get_ylim()
+        shared_top = max(ax1_top, ax2_top, 1)
+        self.ax.set_ylim(yLim, shared_top)
+        self.ax2.set_ylim(yLim, shared_top)
         self.ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         self.ax2.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         self.figure.canvas.draw()
