@@ -70,7 +70,9 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         self.comboBox_mask_2.setFont(font10)
         self.comboBox_mask_2.setMinimumSize(QtCore.QSize(80, 0))
         self.comboBox_mask_2.setEditable(True)
-        self.comboBox_mask_2.setInsertPolicy(QtWidgets.QComboBox.InsertAtCurrent)
+        self.comboBox_mask_2.setInsertPolicy(
+            QtWidgets.QComboBox.InsertAtCurrent
+        )
         for item in ["B7d", "NL11", "A5", "D2b"]:
             self.comboBox_mask_2.addItem(item)
         hl_db.addWidget(self.comboBox_mask_2)
@@ -166,7 +168,8 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         hl_pmask.addWidget(self.label_presetMaskInfo_2)
         hl_pmask.addItem(
             QtWidgets.QSpacerItem(
-                5, 20,
+                5,
+                20,
                 QtWidgets.QSizePolicy.Expanding,
                 QtWidgets.QSizePolicy.Minimum,
             )
@@ -188,9 +191,7 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         self.scrollArea.setMinimumSize(QtCore.QSize(0, 250))
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(
-            QtCore.QRect(0, 0, 140, 300)
-        )
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 140, 300))
         self.scrollAreaWidgetContentslayout = QtWidgets.QGridLayout(
             self.scrollAreaWidgetContents
         )
@@ -205,9 +206,7 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
                 self.scrollAreaWidgetContentslayout.addWidget(
                     cb, row, col, 1, 1
                 )
-        self.scrollAreaWidgetContents.setObjectName(
-            "scrollAreaWidgetContents"
-        )
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
 
         self.scrollArea_b2 = QtWidgets.QScrollArea(self.frame_2)
@@ -251,7 +250,8 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         hl_opts.addWidget(self.checkBox_linearScale_2)
         hl_opts.addItem(
             QtWidgets.QSpacerItem(
-                40, 20,
+                40,
+                20,
                 QtWidgets.QSizePolicy.Expanding,
                 QtWidgets.QSizePolicy.Minimum,
             )
@@ -300,9 +300,7 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         sp_btn = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
         )
-        self.pushButton_browse_1 = QtWidgets.QPushButton(
-            "Board 1", self.frame
-        )
+        self.pushButton_browse_1 = QtWidgets.QPushButton("Board 1", self.frame)
         self.pushButton_browse_1.setSizePolicy(sp_btn)
         self.pushButton_browse_1.setMinimumSize(QtCore.QSize(100, 28))
         self.pushButton_browse_1.setFont(font10)
@@ -312,9 +310,7 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         self.gridLayout.addWidget(self.lineEdit_browse_1, 0, 2, 1, 1)
 
         # Browse row — Board 2 (row 1)
-        self.pushButton_browse_2 = QtWidgets.QPushButton(
-            "Board 2", self.frame
-        )
+        self.pushButton_browse_2 = QtWidgets.QPushButton("Board 2", self.frame)
         self.pushButton_browse_2.setSizePolicy(sp_btn)
         self.pushButton_browse_2.setMinimumSize(QtCore.QSize(100, 28))
         self.pushButton_browse_2.setFont(font10)
@@ -348,11 +344,15 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         # Spacer between plot and sliders (row 5)
         self.gridLayout.addItem(
             QtWidgets.QSpacerItem(
-                20, 5,
+                20,
+                5,
                 QtWidgets.QSizePolicy.Minimum,
                 QtWidgets.QSizePolicy.Fixed,
             ),
-            5, 0, 1, 3,
+            5,
+            0,
+            1,
+            3,
         )
 
         self.gridLayout_2.addWidget(self.frame, 0, 0, 1, 1)
@@ -403,13 +403,9 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
         self.lineEdit_browse_2.textChanged.connect(self.change_path_2)
 
         self.spinBox_leftXLim.valueChanged.connect(self.slot_updateLeftXLim)
-        self.spinBox_rightXLim.valueChanged.connect(
-            self.slot_updateRightXLim
-        )
+        self.spinBox_rightXLim.valueChanged.connect(self.slot_updateRightXLim)
 
-        self.checkBox_presetMask_2.stateChanged.connect(
-            self.presetmask_pixels
-        )
+        self.checkBox_presetMask_2.stateChanged.connect(self.presetmask_pixels)
         self.pushButton_resetMask_2.clicked.connect(self.reset_pix_mask)
         self.comboBox_mask_2.activated.connect(self.reset_pix_mask)
 
@@ -502,16 +498,12 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
 
     def slot_updateLeftXLim(self):
         if self.spinBox_leftXLim.value() >= self.spinBox_rightXLim.value():
-            self.spinBox_leftXLim.setValue(
-                self.spinBox_rightXLim.value() - 1
-            )
+            self.spinBox_leftXLim.setValue(self.spinBox_rightXLim.value() - 1)
         self.leftPosition = self.spinBox_leftXLim.value()
 
     def slot_updateRightXLim(self):
         if self.spinBox_rightXLim.value() <= self.spinBox_leftXLim.value():
-            self.spinBox_rightXLim.setValue(
-                self.spinBox_leftXLim.value() + 1
-            )
+            self.spinBox_rightXLim.setValue(self.spinBox_leftXLim.value() + 1)
         self.rightPosition = self.spinBox_rightXLim.value()
 
     # ------------------------------------------------------------------
@@ -687,9 +679,9 @@ class LinoSPAD2Dual(QtWidgets.QWidget):
 
     def reset_pix_mask(self):
         for i in range(256):
-            self.scrollAreaWidgetContentslayout.itemAt(
-                i
-            ).widget().setChecked(False)
+            self.scrollAreaWidgetContentslayout.itemAt(i).widget().setChecked(
+                False
+            )
             self.scrollAreaWidgetContentslayout_b2.itemAt(
                 i
             ).widget().setChecked(False)
