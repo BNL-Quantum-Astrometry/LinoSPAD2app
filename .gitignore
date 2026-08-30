@@ -32,6 +32,9 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+# ...except the one the release workflow builds from: CI checks out the repo
+# and has nothing to build without it.
+!src/daplis_rtp/main.spec
 
 # Installer logs
 pip-log.txt

@@ -1,10 +1,8 @@
-"""Module for plotting data in the real-time plotting tab.
+"""Plot canvas for the full-sensor (dual-board) tab.
 
-Plots the data provided as number of timestamps vs. pixel number. Options
-for changing the plot scale (linear or logarithmic) and plotting of
-vertical lines at positions 64, 128, and 192 are provided. The figure
-widget is generated with the matplotlib navigation bar for additional
-control over the plot.
+512 pixels on the x-axis. A dashed boundary line is always drawn at
+x=255.5 to mark the split between the two sensor halves. When grouping
+is enabled, vertical lines are drawn at 64, 128, 192, 320, 384, 448.
 
 """
 
@@ -20,57 +18,31 @@ from matplotlib.figure import Figure
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 
 
-class PltCanvas(QWidget):
+class PltCanvasDual(QWidget):
     def __init__(self, parent=None, width=7, height=4, dpi=100):
-        """Creation of the figure widget.
+        super().__init__(parent)
 
-        The widget is created with the bar with options.
-
-        Parameters
-        ----------
-        width : int, optional
-            Figure widget width, by default 7.
-        height : int, optional
-            Figure widget height, by default 4.
-        dpi : int, optional
-            Figure widget dpi, by default 100.
-        """
-        super(PltCanvas, self).__init__(parent)
-
-        # For 'dark_background' style
         plt.style.use("dark_background")
 
-        # a figure instance to plot on
         self.figure = Figure(figsize=(width, height), dpi=100)
         self.canvas = FigureCanvas(self.figure)
-
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.ax = self.figure.add_subplot(111)
         self.figure.subplots_adjust(
             left=0.15, right=0.97, top=0.945, bottom=0.12
         )
 
-        # creating a Vertical Box layout
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.canvas)
         self.layout.addWidget(self.toolbar)
-
         self.setLayout(self.layout)
 
         self.setplotparameters()
 
     def setplotparameters(self, fontsize: int = 16):
-        """Figure parameters manipulation.
-
-        Set font size, axes labels. Set the width and orientation of the
-        axes ticks.
-
-        """
         plt.rcParams.update({"font.size": fontsize})
         self.ax.set_xlabel("Pixel (-)", fontsize=fontsize)
-        # self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
         self.ax.set_ylabel("Photon rate (Hz)", fontsize=fontsize)
-
         self.ax.tick_params(which="both", width=2, direction="in")
         self.ax.tick_params(
             which="major", length=7, direction="in", labelsize=fontsize
@@ -80,7 +52,6 @@ class PltCanvas(QWidget):
         )
         self.ax.yaxis.set_ticks_position("both")
         self.ax.xaxis.set_ticks_position("both")
-
         for axis in ["top", "bottom", "left", "right"]:
             self.ax.spines[axis].set_linewidth(2)
 
@@ -92,40 +63,24 @@ class PltCanvas(QWidget):
         grouping: bool = False,
         fontsize: int = 16,
     ):
-        """Plot data.
-
-        Plot the provided data while following the state of the axis
-        limits and the switch for plotting vertical lines at positions
-        64, 128, and 192.
-
-        Parameters
-        ----------
-        xdataplot : array
-            Data for the x-axis: pixel numbers.
-        yplotdata : array-like
-            Data for the y-axis: number of timestamps.
-        xLim : list
-            Limits for the x-axis.
-        grouping : bool, optional
-            Switch for plotting vertical lines at positiong 64, 128, and
-            192, by default False.
-        """
         self.ax.cla()
-        # self.ax.plot(yplotdata, "-o", color="indianred")
-        # self.ax.plot(yplotdata, "-o", color="#F5D300")
         self.ax.plot(yplotdata, "-o", color="#f48383")
-        if grouping is True:
+
+        # Board boundary
+        self.ax.axvline(
+            x=255.5, color="white", linestyle="--", linewidth=1, alpha=0.5
+        )
+
+        if grouping:
             self.ax.vlines(
-                x=(64, 128, 192), ymin=0, ymax=yplotdata.max(), color="teal"
+                x=(64, 128, 192, 320, 384, 448),
+                ymin=0,
+                ymax=yplotdata.max(),
+                color="teal",
             )
 
-        # <><><><><><><><><><><><><><><>
         mplcyberpunk.make_lines_glow(self.ax, diff_linewidth=1.1)
-        # mplcyberpunk.add_underglow(self.ax)
-        # mplcyberpunk.add_glow_effects(self.ax, gradient_fill=True)
         mplcyberpunk.add_gradient_fill(self.ax, alpha_gradientglow=0.3)
-
-        # <><><><><><><><><><><><><><><>
 
         self.ax.relim()
         self.ax.autoscale_view()
@@ -135,13 +90,10 @@ class PltCanvas(QWidget):
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
-    def setPlotScale(self, scaleLin):
-        """Switches plot scale between logarithmic and linear."""
+    def setPlotScale(self, scaleLin: bool):
         if scaleLin:
             self.ax.set_yscale("linear")
-            self.canvas.draw()
-            self.canvas.flush_events()
         else:
             self.ax.set_yscale("log")
-            self.canvas.draw()
-            self.canvas.flush_events()
+        self.canvas.draw()
+        self.canvas.flush_events()

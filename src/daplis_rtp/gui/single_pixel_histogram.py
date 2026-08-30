@@ -64,7 +64,7 @@ class HistCanvas(QWidget):
 
         """
         plt.rcParams.update({"font.size": fontsize})
-        self.ax.set_xlabel("Pixel (-)", fontsize=fontsize)
+        self.ax.set_xlabel("Time (ps)", fontsize=fontsize)
         self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
 
         self.ax.tick_params(which="both", width=2, direction="in")

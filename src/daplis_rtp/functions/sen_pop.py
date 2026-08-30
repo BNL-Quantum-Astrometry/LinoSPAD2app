@@ -20,6 +20,7 @@ def sen_pop(
     fw_ver,
     timestamps: int = 512,
     pix_add_fix: bool = False,
+    absolute_timestamps: bool = False,
 ):
     """Collect number of timestamps in each pixel.
 
@@ -37,6 +38,12 @@ def sen_pop(
     timestamps : int, optional
         Number of timestamps per acquisition cycle per pixel/TDC, by
         default 512.
+    pix_add_fix : bool, optional
+        Switch for correcting the pixel addressing of the sensor half,
+        by default False.
+    absolute_timestamps : bool, optional
+        Indicator for data files collected with absolute timestamps, by
+        default False.
 
     Returns
     -------
@@ -44,12 +51,16 @@ def sen_pop(
         Array of number of timestamps in each pixel.
     """
     if fw_ver == "2208":
-        data = unpack_bin(file, board_number, fw_ver, timestamps)
+        data = unpack_bin(
+            file, board_number, fw_ver, timestamps, absolute_timestamps
+        )
         valid_per_pixel = np.zeros(256)
         for i in range(len(data)):
             valid_per_pixel[i] = len(np.where(data[i] > 0)[0])
     elif fw_ver[:-1] == "2212":
-        data = unpack_bin(file, board_number, fw_ver, timestamps)
+        data = unpack_bin(
+            file, board_number, fw_ver, timestamps, absolute_timestamps
+        )
         valid_per_pixel = np.zeros(256)
         if fw_ver == "2212s":
             pix_coor = np.arange(256).reshape(4, 64).T
@@ -68,4 +79,9 @@ def sen_pop(
         valid_per_pixel = fix
         del fix
 
-    return valid_per_pixel
+    acq_window_length = np.max(data[:].T[1]) * 1e-12
+    number_of_cycles = len(np.where(data[0].T[0] == -2)[0])
+
+    rates = valid_per_pixel / acq_window_length / number_of_cycles
+
+    return rates

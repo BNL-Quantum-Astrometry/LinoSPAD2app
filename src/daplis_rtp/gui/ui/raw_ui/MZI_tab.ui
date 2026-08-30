@@ -77,16 +77,55 @@
          </font>
         </property>
         <property name="text">
-         <string>Left x limit</string>
+         <string>x limits (s)</string>
         </property>
        </widget>
       </item>
       <item row="6" column="2">
-       <widget class="QSlider" name="horizontalSlider_lowerXLim">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_yLim">
+         <item>
+          <widget class="QLineEdit" name="lineEdit_lowerYLim">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lower y limit. Leave empty to autoscale. Accepts decimals and scientific notation, e.g. 10e3.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>auto</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_upperYLim">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Upper y limit. Leave empty to autoscale. Accepts decimals and scientific notation, e.g. 10e3.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>auto</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
       </item>
       <item row="0" column="2">
        <widget class="QLineEdit" name="lineEdit_browse">
@@ -115,7 +154,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Lower y limit</string>
+         <string>y limits (Hz)</string>
         </property>
        </widget>
       </item>
@@ -136,11 +175,50 @@
        </spacer>
       </item>
       <item row="5" column="2">
-       <widget class="QSlider" name="horizontalSlider_leftXLim">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_xLim">
+         <item>
+          <widget class="QLineEdit" name="lineEdit_leftXLim">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lower x limit. Leave empty to autoscale. Accepts decimals and scientific notation, e.g. 10e3.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>auto</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_rightXLim">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Upper x limit. Leave empty to autoscale. Accepts decimals and scientific notation, e.g. 10e3.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>auto</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
       </item>
      </layout>
     </widget>

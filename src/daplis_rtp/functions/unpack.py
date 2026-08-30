@@ -16,7 +16,13 @@ import numpy as np
 # from daplis_rtp.functions.calibrate import calibrate_load
 
 
-def unpack_bin(file, board_number: str, fw_ver: str, timestamps: int = 512):
+def unpack_bin(
+    file,
+    board_number: str,
+    fw_ver: str,
+    timestamps: int = 512,
+    absolute_timestamps: bool = False,
+):
     """Unpack binary data from LinoSPAD2.
 
     Unpacks binary-encoded .dat files with data from LinoSPAD2 into a
@@ -36,6 +42,12 @@ def unpack_bin(file, board_number: str, fw_ver: str, timestamps: int = 512):
     timestamps : int, optional
         Number of timetstamps per pixel (firmware 2208) or per TDC
         firmware 2212 and per acquisition cycle, by default 512.
+    absolute_timestamps : bool, optional
+        Indicator for data files collected with absolute timestamps. In
+        such files, each acquisition cycle is preceded by two 32-bit
+        words holding the 64-bit absolute timestamp of the cycle; these
+        words are cut here so that the rest of the data can be unpacked
+        as usual. By default False.
 
     Returns
     -------
@@ -50,6 +62,47 @@ def unpack_bin(file, board_number: str, fw_ver: str, timestamps: int = 512):
     """
     # read data by 32 bit words
     rawFile = np.fromfile(file, dtype=np.uint32)
+
+    # Number of words with pixel data in a single acquisition cycle
+    if fw_ver == "2208":
+        words_per_cycle = 256 * timestamps
+    else:
+        words_per_cycle = 65 * timestamps
+
+    # Data files with absolute timestamps hold two extra 32-bit words at
+    # the start of each acquisition cycle - the lower and the higher
+    # parts of the 64-bit counter latched at the start of the cycle
+    cycle_words = words_per_cycle + 2
+
+    if absolute_timestamps:
+        # The file size gives away data without absolute timestamps;
+        # without this check such data would be plotted silently
+        # misaligned instead of failing
+        if (
+            len(rawFile) % cycle_words != 0
+            and len(rawFile) % words_per_cycle == 0
+        ):
+            raise ValueError(
+                "The data file holds no absolute timestamps while "
+                "'absolute_timestamps' is set."
+            )
+        cycles = len(rawFile) // cycle_words
+        # Drop the trailing incomplete cycle, if any, then cut the first
+        # two words of each cycle, leaving the pixel data only
+        rawFile = (
+            rawFile[: cycles * cycle_words]
+            .reshape(cycles, cycle_words)[:, 2:]
+            .reshape(-1)
+        )
+    elif (
+        len(rawFile) % words_per_cycle != 0
+        and len(rawFile) % cycle_words == 0
+    ):
+        raise ValueError(
+            "The data file holds absolute timestamps while "
+            "'absolute_timestamps' is not set."
+        )
+
     # lowest 28 bits are the timestamp; convert to longlong, int is not enough
     data_t = (rawFile & 0xFFFFFFF).astype(np.longlong) * 17.857
     # mask nonvalid data with '-1'

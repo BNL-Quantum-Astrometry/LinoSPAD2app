@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
@@ -8,14 +6,16 @@
 
 from PyQt5 import QtCore, QtWidgets
 
+from daplis_rtp.gui.linospad2_dual_tab import LinoSPAD2Dual
 from daplis_rtp.gui.live_timestamps_tab import LiveTimestamps
 from daplis_rtp.gui.MZI_tab import MZI
 from daplis_rtp.gui.single_pix_hist_tab import SinglePixelHistogram
+from daplis_rtp.gui.synchronization_tab import Synchronization
 
 # from graphic.delta_t_tab import Delta_t
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow:
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(899, 650)
@@ -76,6 +76,12 @@ class Ui_MainWindow(object):
         self.tab_4 = MZI(self)
         self.tab_4.setObjectName("tab_4")
         self.tabWidget.addTab(self.tab_4, "")
+        self.tab_5 = LinoSPAD2Dual(self)
+        self.tab_5.setObjectName("tab_5")
+        self.tabWidget.addTab(self.tab_5, "")
+        self.tab_6 = Synchronization(self)
+        self.tab_6.setObjectName("tab_6")
+        self.tabWidget.addTab(self.tab_6, "")
         self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -109,4 +115,12 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_4),
             _translate("MainWindow", "MZI"),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_5),
+            _translate("MainWindow", "Full Sensor"),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_6),
+            _translate("MainWindow", "Synchronization"),
         )

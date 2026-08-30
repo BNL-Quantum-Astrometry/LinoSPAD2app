@@ -1,7 +1,7 @@
 """Module for plotting photon count from two chosen pixel in real time.
 
 Unpacks the binary data, finds the two pixels requested and plots the
-number of photons registered by the two pixels. x-axis limits are given 
+number of photons registered by the two pixels. x-axis limits are given
 by the slider, upper y-axis limit is set as maximum of the two counts
 plus 10 percent.
 
@@ -59,9 +59,6 @@ class PltCanvas_MZI(QWidget):
 
         self.setplotparameters()
 
-        # Upper ylim for the plot
-        self.upper_ylim = 0
-
     def setplotparameters(self, fontsize: int = 16):
         """Figure parameters manipulation.
 
@@ -70,8 +67,9 @@ class PltCanvas_MZI(QWidget):
 
         """
         plt.rcParams.update({"font.size": fontsize})
-        self.ax.set_xlabel("Pixel (-)", fontsize=fontsize)
-        self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        self.ax.set_xlabel("Time (s)", fontsize=fontsize)
+        # self.ax.set_ylabel("# of timestamps (-)", fontsize=fontsize)
+        self.ax.set_ylabel("Photon rate (Hz)", fontsize=fontsize)
 
         self.ax.tick_params(which="both", width=2, direction="in")
         self.ax.tick_params(
@@ -92,39 +90,68 @@ class PltCanvas_MZI(QWidget):
         for axis in ["top", "bottom", "left", "right"]:
             self.ax.spines[axis].set_linewidth(2)
 
-    def setPlotData_MZI(self, xdataplot, yplotdata1, yplotdata2, xLim, yLim):
+    def setPlotData_MZI(
+        self, xdataplot, yplotdata1, yplotdata2, xLim, yLim, fontsize: int = 16
+    ):
         """Plot data.
 
-        Plot the provided data while following the state of the axis
-        limits and the switch for plotting vertical lines at positions
-        64, 128, and 192.
+        Plot the provided data, applying whichever axis limits were given
+        explicitly and autoscaling the rest.
 
         Parameters
         ----------
         xdataplot : array
-            Data for the x-axis: pixel numbers.
-        yplotdata : array-like
-            Data for the y-axis: number of timestamps.
-        xLim : list
-            Limits for the x-axis.
-        grouping : bool, optional
-            Switch for plotting vertical lines at positiong 64, 128, and
-            192, by default False.
+            Data for the x-axis: elapsed time in seconds.
+        yplotdata1 : array-like
+            Data for the left y-axis: photon rate in the first pixel.
+        yplotdata2 : array-like
+            Data for the right y-axis: photon rate in the second pixel.
+        xLim : tuple of (float or None, float or None)
+            Lower and upper limits for the x-axis. 'None' for either edge
+            leaves that edge autoscaled; the upper edge then sits two
+            seconds past the newest point, as it did when only the lower
+            edge was adjustable.
+        yLim : tuple of (float or None, float or None)
+            Lower and upper limits for the y-axis, 'None' for autoscale.
+            Both y-axes always share the same limits so the two traces can
+            be compared directly.
+        fontsize : int, optional
+            Font size for the axes, by default 16.
         """
         # self.ax.cla()
         self.ax.plot(xdataplot, yplotdata1, "-o", color="indianred")
         self.ax2.plot(xdataplot, yplotdata2, "-o", color="teal")
+        # set_xlim/set_ylim below latch autoscaling off. Switch it back on
+        # before measuring, or an edge whose field was cleared back to empty
+        # would stay stuck at the last value it was given instead of
+        # returning to autoscale.
+        self.ax.autoscale(enable=True, axis="both")
+        self.ax2.autoscale(enable=True, axis="both")
         self.ax.relim()
         self.ax.autoscale_view()
-        self.setplotparameters()
-        self.ax.set_xlim(xLim, xdataplot[-1] + 2)
+        self.ax2.relim()
+        self.ax2.autoscale_view()
+        self.setplotparameters(fontsize)
 
-        new_ylim = np.max([yplotdata1[-1], yplotdata2[-1]]) * 1.1
-        if new_ylim > self.upper_ylim:
-            self.upper_ylim = new_ylim
+        x_lo, x_hi = xLim
+        auto_x_lo, _ = self.ax.get_xlim()
+        self.ax.set_xlim(
+            auto_x_lo if x_lo is None else x_lo,
+            xdataplot[-1] + 2 if x_hi is None else x_hi,
+        )
 
-        self.ax.set_ylim(yLim, self.upper_ylim)
-        self.ax2.set_ylim(yLim, self.upper_ylim)
+        # Read both axes before setting either: the shared limits have to
+        # cover the data on both, so the autoscaled extremes of the pair are
+        # what an unset edge falls back to.
+        ax1_bottom, ax1_top = self.ax.get_ylim()
+        ax2_bottom, ax2_top = self.ax2.get_ylim()
+        y_lo, y_hi = yLim
+        shared_bottom = (
+            min(ax1_bottom, ax2_bottom) if y_lo is None else y_lo
+        )
+        shared_top = max(ax1_top, ax2_top, 1) if y_hi is None else y_hi
+        self.ax.set_ylim(shared_bottom, shared_top)
+        self.ax2.set_ylim(shared_bottom, shared_top)
         self.ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         self.ax2.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         self.figure.canvas.draw()
