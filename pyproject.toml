@@ -23,7 +23,14 @@ classifiers = [
 keywords = ["timestamp", "analysis", "LinoSPAD2"]
 
 dependencies = [
-    "matplotlib>=3.6.2",
+    # Capped below 3.11: that release folded 'matplotlib/style/core.py' into
+    # 'matplotlib/style/__init__.py', removing the 'matplotlib.style.core'
+    # submodule. mplcyberpunk 0.7.6 (the newest release) calls
+    # 'mpl.style.core.read_style_directory()' at import time and declares no
+    # upper bound of its own, so an unpinned install pairs the two and the app
+    # dies on startup with "module 'matplotlib.style' has no attribute 'core'".
+    # Lift this once mplcyberpunk supports matplotlib 3.11.
+    "matplotlib>=3.6.2,<3.11",
     "mplcyberpunk",
     "numpy>=1.23.5",
     "PyQt5>=5.15.7",

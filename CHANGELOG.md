@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-08-30
+
+Fixes the 1.3.0 executable, which could not start.
+
+### Fixed
+
+- `matplotlib` capped below 3.11 in `pyproject.toml` and `requirements.txt`.
+  Matplotlib 3.11 folded `matplotlib/style/core.py` into
+  `matplotlib/style/__init__.py`, removing the `matplotlib.style.core`
+  submodule. mplcyberpunk 0.7.6 - the newest release, and unbounded on
+  matplotlib in its own metadata - calls
+  `mpl.style.core.read_style_directory()` while being imported, so an
+  unpinned install pairs the two and the app dies at startup with
+  "module 'matplotlib.style' has no attribute 'core'".
+
+  This only ever showed up in the released executable: the dependency is
+  resolved fresh in CI, which picked up 3.11.1, while a development
+  machine keeps whatever older matplotlib it already had. Lift the cap
+  once mplcyberpunk supports matplotlib 3.11.
+
 ## [1.3.0] - 2026-06-24
 
 New "Full Sensor" tab, PyInstaller packaging improvements, MZI tab fixes.
