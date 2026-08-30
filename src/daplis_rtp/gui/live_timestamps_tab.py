@@ -33,10 +33,12 @@ class LiveTimestamps(QtWidgets.QWidget):
         between a linear and a logarithmic scale of the plot along with
         a check box for plotting vertical lines at positions 64, 128, and
         192 are provided (the latter can be used for firmware versions
-        2208 and 2212s for setup alignment). Buttons 'Refresh plot' for
+        2208 and 2212s for setup alignment). A check box for data files
+        collected with absolute timestamps is provided. Buttons
+        'Refresh plot' for
         refreshing the plot and 'Start stream' for plotting the
-        last file found are created. Two sliders for the left and right
-        limits for the x-axis are created.
+        last file found are created. Two spin boxes for the left and
+        right limits for the x-axis, in pixels, are created.
 
         """
         super().__init__(parent)
@@ -91,19 +93,21 @@ class LiveTimestamps(QtWidgets.QWidget):
         self.widget_figure.setObjectName("widget")
         self.gridLayout.addWidget(self.widget_figure, 1, 0, 4, 3)
 
-        # Sliders
-        self.horizontalSlider_leftXLim.valueChanged.connect(
-            self.slot_updateLeftSlider
-        )
-        self.horizontalSlider_rightXLim.valueChanged.connect(
-            self.slot_updateRightSlider
-        )
+        # x-axis limits: one spin box per edge, over the pixel range
+        self.spinBox_leftXLim.setRange(0, 255)
+        self.spinBox_rightXLim.setRange(0, 255)
+        self.spinBox_leftXLim.setValue(0)
+        self.spinBox_rightXLim.setValue(255)
+        # Without this, valueChanged fires on every keystroke, so typing a
+        # smaller right limit gets clamped against the old left one halfway
+        # through the number. Now the value is committed on Enter or focus
+        # loss, and the arrows still work as before.
+        self.spinBox_leftXLim.setKeyboardTracking(False)
+        self.spinBox_rightXLim.setKeyboardTracking(False)
 
-        self.horizontalSlider_leftXLim.setMinimum(0)
-        self.horizontalSlider_leftXLim.setMaximum(255)
-        self.horizontalSlider_rightXLim.setMinimum(0)
-        self.horizontalSlider_rightXLim.setMaximum(255)
-        self.horizontalSlider_rightXLim.setSliderPosition(255)
+        self.spinBox_leftXLim.valueChanged.connect(self.slot_updateLeftXLim)
+        self.spinBox_rightXLim.valueChanged.connect(self.slot_updateRightXLim)
+
         self.leftPosition = 0
         self.rightPosition = 255
 
@@ -238,37 +242,29 @@ class LiveTimestamps(QtWidgets.QWidget):
         self.update_time_stamp()
         self.last_file_ctime = 0
 
-    def slot_updateLeftSlider(self):
-        """Called when left slider state has changed.
+    def slot_updateLeftXLim(self):
+        """Called when the left x-limit spin box has changed.
 
-        Updates the left x-axis limit based on the position of the
-        slider.
-
-        """
-        if (
-            self.horizontalSlider_leftXLim.value()
-            >= self.horizontalSlider_rightXLim.value()
-        ):
-            self.horizontalSlider_leftXLim.setValue(
-                self.horizontalSlider_rightXLim.value() - 1
-            )
-        self.leftPosition = self.horizontalSlider_leftXLim.value()
-
-    def slot_updateRightSlider(self):
-        """Called when right slider state has changed.
-
-        Updates the right x-axis limit based on the position of the
-        slider.
+        Updates the left x-axis limit, keeping it below the right one.
 
         """
-        if (
-            self.horizontalSlider_rightXLim.value()
-            <= self.horizontalSlider_leftXLim.value()
-        ):
-            self.horizontalSlider_rightXLim.setValue(
-                self.horizontalSlider_leftXLim.value() + 1
+        if self.spinBox_leftXLim.value() >= self.spinBox_rightXLim.value():
+            self.spinBox_leftXLim.setValue(
+                self.spinBox_rightXLim.value() - 1
             )
-        self.rightPosition = self.horizontalSlider_rightXLim.value()
+        self.leftPosition = self.spinBox_leftXLim.value()
+
+    def slot_updateRightXLim(self):
+        """Called when the right x-limit spin box has changed.
+
+        Updates the right x-axis limit, keeping it above the left one.
+
+        """
+        if self.spinBox_rightXLim.value() <= self.spinBox_leftXLim.value():
+            self.spinBox_rightXLim.setValue(
+                self.spinBox_leftXLim.value() + 1
+            )
+        self.rightPosition = self.spinBox_rightXLim.value()
 
     def update_time_stamp(self):
         """Called during the cycle of real-time plotting.
@@ -279,8 +275,7 @@ class LiveTimestamps(QtWidgets.QWidget):
         """
         stopping = False
         self.mask_pixels()
-        os.chdir(self.pathtotimestamp)
-        DATA_FILES = glob.glob("*.dat*")
+        DATA_FILES = glob.glob(os.path.join(self.pathtotimestamp, "*.dat*"))
         try:
             last_file = max(DATA_FILES, key=os.path.getctime)
             new_file_ctime = os.path.getctime(last_file)
@@ -299,11 +294,14 @@ class LiveTimestamps(QtWidgets.QWidget):
                     self.last_file_ctime = new_file_ctime
 
                     validtimestamps = sen_pop(
-                        self.pathtotimestamp + "/" + last_file,
+                        last_file,
                         board_number=self.comboBox_mask_2.currentText(),
                         fw_ver=self.comboBox_FW_2.currentText(),
                         timestamps=self.spinBox_timestamps_2.value(),
                         pix_add_fix=self.checkBox_pix_add_fix.isChecked(),
+                        absolute_timestamps=(
+                            self.checkBox_abs_timestamps.isChecked()
+                        ),
                     )
                     validtimestamps = validtimestamps * self.maskValidPixels
                     self.widget_figure.setPlotData(
@@ -323,12 +321,14 @@ class LiveTimestamps(QtWidgets.QWidget):
                         np.argwhere(validtimestamps == copy_for_max[-2])[0][0]
                     )
 
-            except ValueError:
+            except (ValueError, FileNotFoundError, OSError) as err:
                 msg_window = QtWidgets.QMessageBox()
                 msg_window.setText(
-                    "Cannot unpack data, check the timestamp setting and "
-                    "the firmware version."
+                    "Cannot read data file — it may have been removed. "
+                    "Check the timestamp setting, the firmware version, "
+                    "and whether the data hold absolute timestamps."
                 )
+                msg_window.setDetailedText(str(err))
                 msg_window.setWindowTitle("Error")
                 msg_window.exec_()
                 self.slot_stopstream()

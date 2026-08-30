@@ -1,0 +1,73 @@
+name: Build and release Windows executable
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Before anything is built: the version the app reports must match the
+      # newest numbered section of CHANGELOG.md. The version otherwise only
+      # ever surfaces in a release tag, where nobody proof-reads it, so it is a
+      # build gate rather than a convention.
+      - name: Check version against CHANGELOG
+        run: python tools/check_version.py
+
+      # Installing the package itself, not just requirements.txt: main.spec
+      # calls collect_data_files('daplis_rtp'), which needs the package to be
+      # importable, and this is also what pulls in the masks and calibration
+      # data declared under [tool.setuptools.package-data].
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          pip install pyinstaller
+
+      # main.spec (not `pyinstaller --onefile main.py`) is required here --
+      # collect_data_files() in the spec is what ships the pixel masks and the
+      # calibration data that PyInstaller's static analysis cannot discover.
+      - name: Build executable
+        working-directory: src/daplis_rtp
+        run: pyinstaller --clean main.spec
+
+      - name: Collect version and commit
+        id: vars
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$(python -c 'import re,pathlib; print(re.search(r"__version__\s*=\s*\"([^\"]+)\"", pathlib.Path("src/daplis_rtp/__init__.py").read_text()).group(1))')" >> "$GITHUB_OUTPUT"
+
+      # Every commit to main publishes a build, so the tag has to stay unique
+      # per run -- but it carries the version, and so do the release name and
+      # the exe, so a downloaded daplis-rtp.exe can be told apart from another.
+      - name: Name the executable after the version
+        shell: bash
+        run: |
+          mv "src/daplis_rtp/dist/daplis-rtp.exe" \
+             "src/daplis_rtp/dist/daplis-rtp-v${{ steps.vars.outputs.version }}.exe"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.vars.outputs.version }}-build.${{ github.run_number }}
+          name: "daplis-rtp v${{ steps.vars.outputs.version }} — build #${{ github.run_number }} (${{ steps.vars.outputs.sha_short }})"
+          body: |
+            Version **${{ steps.vars.outputs.version }}**, built from commit ${{ github.sha }}.
+
+            The version is the newest numbered section of `CHANGELOG.md`; see it
+            for what changed.
+          files: src/daplis_rtp/dist/daplis-rtp-v${{ steps.vars.outputs.version }}.exe

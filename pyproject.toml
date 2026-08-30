@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "daplis-rtp"
-version = "1.2.0"
+# Read from daplis_rtp.__version__ rather than duplicated here, so that the
+# package, the app and the CHANGELOG cannot state different versions.
+dynamic = ["version"]
 description = "Data Analysis Package for LInoSpad - Real-Time Plotting"
 authors = [{ name = "Sergei Kulkov", email = "sergei.kulkov23@gmail.com" }]
 license = { text = "MIT" }
@@ -22,17 +24,20 @@ keywords = ["timestamp", "analysis", "LinoSPAD2"]
 
 dependencies = [
     "matplotlib>=3.6.2",
+    "mplcyberpunk",
     "numpy>=1.23.5",
     "PyQt5>=5.15.7",
-    "setuptools>=70.0",
     "qdarkstyle>=3.2.0",
 ]
+
+[tool.setuptools.dynamic]
+version = { attr = "daplis_rtp.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-daplis = ["*.txt", "*.csv"]
+"daplis_rtp" = ["params/masks/*.txt", "params/calibration_data/*.csv"]
 
 [project.scripts]
 daplis-rtp = "daplis_rtp.main:main"
